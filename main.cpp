@@ -56,7 +56,7 @@ void usage()
 	printf("EraseFlash:\t\tef \r\n");
 	printf("TestDevice:\t\ttd\r\n");
 	printf("ResetDevice:\t\trd [subcode]\r\n");
-	printf("ChangeStorage:\t\tcs [storage: 1=EMMC, 2=SD, 9=SPINOR]\r\n");
+	printf("ChangeStorage:\t\tcs [storage: 1=EMMC, 2=SD, 8=SPINAND, 9=SPINOR]\r\n");
 	printf("ReadFlashID:\t\trid\r\n");
 	printf("ReadFlashInfo:\t\trfi\r\n");
 	printf("ReadChipInfo:\t\trci\r\n");
