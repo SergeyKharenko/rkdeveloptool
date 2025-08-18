@@ -1,56 +1,51 @@
-# Project name
-set (PROJECT_NAME "rkDevelopTool_Mac")
+cmake_minimum_required(VERSION 3.20)
+project(rkdeveloptool VERSION 1.32
+        DESCRIPTION "Rockchip rkdeveloptool"
+        LANGUAGES CXX)
 
-# The version number.
-set (RKDevelopTool_Mac_PACKAGE_VERSION "1.3")
+set(CMAKE_CXX_STANDARD 17)
+set(PROJECT_BUG_REPORT_ADDRESS "Eddie Cai <eddie.cai.linux@gmail.com>")
 
-file (GLOB LOCAL_CPP_FILES *.cpp)
-set (SOURCE_FILES ${SOURCE_FILES} ${LOCAL_CPP_FILES})
+find_package(PkgConfig REQUIRED)
 
-file (GLOB LOCAL_H_FILES *.h)
-set (HEADER_FILES ${HEADER_FILES} ${LOCAL_H_FILES})
+pkg_check_modules(LIBUSB1 REQUIRED libusb-1.0)
 
-# Set your libusb path
-set (libusb_INCLUDE_DIR "/usr/local/Cellar/libusb/1.0.22/include/libusb-1.0/")
-set (libusb_STATIC "/usr/local/Cellar/libusb/1.0.22/lib/")
+add_compile_options(
+        -Wall
+        -Werror
+        -Wextra
+        -Wreturn-type
+        -fno-strict-aliasing
+)
 
-# Set your libiconv path
-set (libiconv_INCLUDE_DIR "/usr/local/opt/libiconv/include/")
-set (libiconv_STATIC "/usr/local/opt/libiconv/lib/")
+add_library(rkutils STATIC
+        crc.cpp
+        RKBoot.cpp
+        RKComm.cpp
+        RKDevice.cpp
+        RKImage.cpp
+        RKLog.cpp
+        RKScan.cpp
+)
 
-cmake_minimum_required (VERSION 2.6)
-project (${PROJECT_NAME})
+add_executable(rkdeveloptool main.cpp)
 
+add_dependencies(rkdeveloptool rkutils)
 
-# Turn off build log
-# set (CMAKE_VERBOSE_MAKEFILE ON)
+target_compile_definitions(rkutils
+        PRIVATE
+        _FILE_OFFSET_BITS=64
+        _LARGE_FILE
+)
+target_include_directories(rkutils PRIVATE ${LIBUSB1_INCLUDE_DIRS})
+target_link_libraries(rkutils PRIVATE ${LIBUSB1_LIBRARIES})
 
-# Configure a header file to pass some of the CMake settings
-# to the source code
-configure_file (
-    "${PROJECT_SOURCE_DIR}/config.h.in"
-    "${PROJECT_BINARY_DIR}/config.h"
-    )
+target_compile_definitions(rkdeveloptool PRIVATE
+        PACKAGE_VERSION=\"${PROJECT_VERSION}\")
+target_include_directories(rkdeveloptool PRIVATE ${LIBUSB1_INCLUDE_DIRS})
+target_link_libraries(rkdeveloptool PRIVATE
+        rkutils
+        ${LIBUSB1_LIBRARIES}
+)
 
-# add the binary tree to the search path for include files
-# so that we will find config.h
-include_directories (
-    "${PROJECT_BINARY_DIR}"
-    "${PROJECT_SOURCE_DIR}"
-    "${libusb_INCLUDE_DIR}"
-    "${libiconv_INCLUDE_DIR}"
-    )
-
-link_directories (
-    ${libusb_STATIC}
-    ${libiconv_STATIC}
-    )
-
-add_executable (${PROJECT_NAME} ${SOURCE_FILES})
-
-target_link_libraries (
-    "${PROJECT_NAME}"
-    "${libusb_STATIC}/libusb-1.0.dylib"
-    "${libiconv_STATIC}/libiconv.dylib"
-    )
-
+install(TARGETS rkdeveloptool RUNTIME DESTINATION bin)

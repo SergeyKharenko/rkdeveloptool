@@ -7,7 +7,6 @@
 
 #include   <unistd.h>
 #include   <dirent.h>
-#include "config.h"
 #include "DefineHeader.h"
 #include "gpt.h"
 #include "RKLog.h"
