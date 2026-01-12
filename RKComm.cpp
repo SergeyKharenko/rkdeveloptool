@@ -7,7 +7,7 @@
 
 #include "RKComm.h"
 #include "RKLog.h"
-#include "Endian.h"
+#include <endian.h>
 extern unsigned short CRC_CCITT(unsigned char* p, UINT CalculateNumber);
 CRKComm::CRKComm(CRKLog *pLog)
 {
@@ -186,8 +186,8 @@ void CRKUsbComm::InitializeCBW(PCBW pCBW, USB_OPERATION_CODE code)
 {
 	memset(pCBW,0, sizeof(CBW));
 
-	pCBW->dwCBWSignature = CBW_SIGN;
-	pCBW->dwCBWTag = MakeCBWTag();
+	pCBW->dwCBWSignature = htole32(CBW_SIGN);
+	pCBW->dwCBWTag = htole32(MakeCBWTag());
 	pCBW->cbwcb.ucOperCode = code;
 
 	switch(code) {
@@ -294,8 +294,8 @@ int CRKUsbComm::RKU_EraseBlock(BYTE ucFlashCS, DWORD dwPos, DWORD dwCount, BYTE 
 
 	InitializeCBW(&cbw, (USB_OPERATION_CODE)ucEraseType);
 	cbw.ucCBWLUN = ucFlashCS;
-	cbw.cbwcb.dwAddress = EndianU32_LtoB(dwPos);
-	cbw.cbwcb.usLength = EndianU16_LtoB(usCount);
+	cbw.cbwcb.dwAddress = htobe32(dwPos);
+	cbw.cbwcb.usLength = htobe16(usCount);
 
 	if(!RKU_Write((BYTE *)&cbw, sizeof(CBW)))
 	{
@@ -328,7 +328,7 @@ int CRKUsbComm::RKU_ReadChipInfo(BYTE* lpBuffer)
 	CSW csw;
 
 	InitializeCBW(&cbw, READ_CHIP_INFO);
-	cbw.dwCBWTransferLength = 16;
+	cbw.dwCBWTransferLength = htole32(16);
 
 	if(!RKU_Write((BYTE *)&cbw, sizeof(CBW)))
 	{
@@ -363,7 +363,7 @@ int CRKUsbComm::RKU_ReadFlashID(BYTE* lpBuffer)
 	CSW csw;
 
 	InitializeCBW(&cbw, READ_FLASH_ID);
-	cbw.dwCBWTransferLength = 5;
+	cbw.dwCBWTransferLength = htole32(5);
 
 	if(!RKU_Write((BYTE *)&cbw, sizeof(CBW)))
 	{
@@ -397,7 +397,7 @@ int CRKUsbComm::RKU_ReadFlashInfo(BYTE* lpBuffer, UINT *puiRead)
 	CSW csw;
 
 	InitializeCBW(&cbw, READ_FLASH_INFO);
-	cbw.dwCBWTransferLength = 11;
+	cbw.dwCBWTransferLength = htole32(11);
 
 	if(!RKU_Write((BYTE *)&cbw, sizeof(CBW)))
 	{
@@ -444,7 +444,7 @@ int CRKUsbComm::RKU_ReadCapability(BYTE* lpBuffer)
 	DWORD dwRead;
 	
 	InitializeCBW(&cbw, READ_CAPABILITY);
-	cbw.dwCBWTransferLength = 8;
+	cbw.dwCBWTransferLength = htole32(8);
 	
 	if(!RKU_Write((BYTE*)&cbw, sizeof(CBW)))
 	{
@@ -486,9 +486,9 @@ int CRKUsbComm::RKU_ReadLBA(DWORD dwPos, DWORD dwCount, BYTE* lpBuffer, BYTE byS
 	usSectorLen=dwCount;
 
 	InitializeCBW(&cbw, READ_LBA);
-	cbw.dwCBWTransferLength = dwCount * wSectorSize;
-	cbw.cbwcb.dwAddress = EndianU32_LtoB(dwPos);
-	cbw.cbwcb.usLength = EndianU16_LtoB(usSectorLen);
+	cbw.dwCBWTransferLength = htole32(dwCount * wSectorSize);
+	cbw.cbwcb.dwAddress = htobe32(dwPos);
+	cbw.cbwcb.usLength = htobe16(usSectorLen);
 	cbw.cbwcb.ucReserved = bySubCode;
 
 	if(!RKU_Write((BYTE *)&cbw, sizeof(CBW)))
@@ -610,7 +610,7 @@ int CRKUsbComm::RKU_ReadStorage(BYTE* storage)
 	DWORD dwRead;
 
 	InitializeCBW(&cbw, READ_STORAGE);
-	cbw.dwCBWTransferLength = 4;
+	cbw.dwCBWTransferLength = htole32(4);
 
 	if(!RKU_Write((BYTE*)&cbw, sizeof(CBW)))
 	{
@@ -678,9 +678,8 @@ int CRKUsbComm::RKU_TestDeviceReady(DWORD *dwTotal, DWORD *dwCurrent, BYTE bySub
 	if ((dwTotal!=NULL)&&(dwCurrent!=NULL)) {
 		*dwCurrent = (csw.dwCBWDataResidue >>16);
 		*dwTotal = (csw.dwCBWDataResidue & 0x0000FFFF);
-
-		*dwTotal = EndianU16_BtoL(*dwTotal);
-		*dwCurrent = EndianU16_BtoL(*dwCurrent);
+		*dwCurrent = be16toh(*dwCurrent);
+		*dwTotal = be16toh(*dwTotal);
 	}
 	if(csw.ucCSWStatus == 1) {
 		return ERR_DEVICE_UNREADY;
@@ -705,9 +704,9 @@ int CRKUsbComm::RKU_WriteLBA(DWORD dwPos, DWORD dwCount, BYTE* lpBuffer, BYTE by
 	DWORD dwTotal = usCount * wSectorSize;
 
 	InitializeCBW(&cbw, WRITE_LBA);
-	cbw.dwCBWTransferLength = dwCount * wSectorSize;
-	cbw.cbwcb.dwAddress = EndianU32_LtoB(dwPos);
-	cbw.cbwcb.usLength = EndianU16_LtoB(usCount);
+	cbw.dwCBWTransferLength = htole32(dwCount * wSectorSize);
+	cbw.cbwcb.dwAddress = htobe32(dwPos);
+	cbw.cbwcb.usLength = htobe16(usCount);
 	cbw.cbwcb.ucReserved = bySubCode;
 	if(!RKU_Write( (BYTE *)&cbw, sizeof(CBW))) {
 		return ERR_DEVICE_WRITE_FAILED;
@@ -744,8 +743,8 @@ int CRKUsbComm::RKU_EraseLBA(DWORD dwPos, DWORD dwCount)
 
 
 	InitializeCBW(&cbw, ERASE_LBA);
-	cbw.cbwcb.dwAddress = EndianU32_LtoB(dwPos);
-	cbw.cbwcb.usLength = EndianU16_LtoB(usCount);
+	cbw.cbwcb.dwAddress = htobe32(dwPos);
+	cbw.cbwcb.usLength = htobe16(usCount);
 
 	if(!RKU_Write( (BYTE *)&cbw, sizeof(CBW))) {
 		return ERR_DEVICE_WRITE_FAILED;
@@ -782,9 +781,9 @@ int CRKUsbComm::RKU_WriteSector(DWORD dwPos, DWORD dwCount, BYTE *lpBuffer)
 
 	wSectorSize = 528;
 	InitializeCBW(&cbw, WRITE_SECTOR);
-	cbw.dwCBWTransferLength = dwCount * wSectorSize;
-	cbw.cbwcb.dwAddress = EndianU32_LtoB(dwPos);
-	cbw.cbwcb.usLength = EndianU16_LtoB(usCount);
+	cbw.dwCBWTransferLength = htole32(dwCount * wSectorSize);
+	cbw.cbwcb.dwAddress = htobe32(dwPos);
+	cbw.cbwcb.usLength = htobe16(usCount);
 
 	if(!RKU_Write( (BYTE *)&cbw, sizeof(CBW))) {
 		return ERR_DEVICE_WRITE_FAILED;
@@ -880,5 +879,3 @@ int CRKUsbComm::RKU_DeviceRequest(DWORD dwRequest, BYTE *lpBuffer, DWORD dwDataS
 
     return ERR_SUCCESS;
 }
-
-
