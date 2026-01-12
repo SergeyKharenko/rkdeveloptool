@@ -18,6 +18,8 @@ ATTRS{idVendor}=="2207", ATTRS{idProduct}=="330c", MODE="0666", GROUP="users"
 ATTRS{idVendor}=="2207", ATTRS{idProduct}=="350a", MODE="0666", GROUP="users"
 # RK3588(S)
 ATTRS{idVendor}=="2207", ATTRS{idProduct}=="350b", MODE="0666", GROUP="users"
+# RK3562
+ATTRS{idVendor}=="2207", ATTRS{idProduct}=="350d", MODE="0666", GROUP="users"
 # RK3576
 ATTRS{idVendor}=="2207", ATTRS{idProduct}=="350e", MODE="0666", GROUP="users"
 # RK3506
