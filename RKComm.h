@@ -1,7 +1,6 @@
 #ifndef RKCOMM_HEADER
 #define RKCOMM_HEADER
 #include "DefineHeader.h"
-#include <endian.h>
 typedef enum {
 		USB_BULK_READ = 0,
 		USB_BULK_WRITE,
@@ -66,8 +65,6 @@ typedef struct {
 	USHORT	usLength;
 	BYTE	ucReserved3[7];
 } CBWCB, *PCBWCB;
-// CBWCB fields are interpreted by the command set; in this project dwAddress/usLength
-// are treated as big-endian (see RKComm.cpp conversions).
 
 typedef struct {
 	DWORD	dwCBWSignature;
@@ -78,7 +75,6 @@ typedef struct {
 	BYTE	ucCBWCBLength;
 	CBWCB	cbwcb;
 } CBW, *PCBW;
-// CBW header fields are USB BOT little-endian; cbwcb follows command-set endianness.
 
 typedef struct {
 	DWORD	dwCSWSignature;
@@ -86,9 +82,6 @@ typedef struct {
 	DWORD	dwCBWDataResidue;
 	BYTE	ucCSWStatus;
 } CSW, *PCSW;
-// CSW fields are USB BOT little-endian.
-// Note: this project interprets dwCBWDataResidue as a big-endian 32-bit value that
-// packs two 16-bit values (current=low, total=high) (see RKComm.cpp).
 
 #pragma pack()
 #define CMD_TIMEOUT 0
@@ -118,9 +111,7 @@ typedef struct {
 #define ERR_REQUEST_NOT_SUPPORT  -11
 #define ERR_REQUEST_FAIL		-12
 #define ERR_BUFFER_NOT_ENOUGH   -13
-#define UFI_CHECK_SIGN(cbw, csw) \
-	((CSW_SIGN == le32toh((csw).dwCSWSignature)) && \
-	 (le32toh((csw).dwCSWTag) == le32toh((cbw).dwCBWTag)))
+#define UFI_CHECK_SIGN(cbw, csw) ((CSW_SIGN == (csw).dwCSWSignature) && ((csw).dwCSWTag == (cbw).dwCBWTag))
 
 class CRKLog;
 class CRKComm
